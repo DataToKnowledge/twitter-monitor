@@ -1,5 +1,8 @@
 *.class
 *.log
+*.env
+src/main/resources/private.conf
+src/test/resources/private.conf
 
 # sbt specific
 .cache
