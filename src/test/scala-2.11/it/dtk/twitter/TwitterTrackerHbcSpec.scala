@@ -21,44 +21,18 @@ class TwitterTrackerHbcSpec extends AkkaWordSpec("BasicProducer") {
     "created " should {
       "result stopped " in {
         tracker ! Status
-        expectMsg(OperationAck(Stop, s"the service is stopped ${Stop}"))
+        expectMsg(OperationAck(Stop.toString, s"the service is stopped ${Stop}"))
       }
     }
     val terms = Set("bari", "news", "croncaca")
     s"the terms $terms are add" should {
       "have 3 terms tracked" in {
-        val msg = TrackTerms(terms)
+        val msg = Track(terms = terms)
         tracker ! msg
-        expectMsg(MonitoringAck(msg, s"currently are tracked ${terms.size} terms"))
+        expectMsg(Track(terms = terms))
       }
     }
 
-    val terms2 = Set("bari", "news")
-    s"the terms $terms2 are add" should {
-      "have 3 terms tracked" in {
-        val msg = TrackTerms(terms2)
-        tracker ! msg
-        expectMsg(MonitoringAck(msg, s"currently are tracked 3 terms"))
-      }
-    }
-
-    val terms3 = Set("milano", "furto")
-    s"the terms $terms3 are add" should {
-      "have 5 terms tracked" in {
-        val msg = TrackTerms(terms3)
-        tracker ! msg
-        expectMsg(MonitoringAck(msg, s"currently are tracked 5 terms"))
-      }
-    }
-
-    val users = Set(1L, 2L, 3L)
-    s"the users $users are add" should {
-      "track 3 users" in {
-        val msg = TrackUsers(users)
-        tracker ! msg
-        expectMsg(MonitoringAck(msg, s"currently are tracked ${users.size} users"))
-      }
-    }
   }
 
   "A TwitterTrackerHbc" when {
@@ -67,23 +41,23 @@ class TwitterTrackerHbcSpec extends AkkaWordSpec("BasicProducer") {
     val terms = Set("bari", "news", "croncaca")
     s"started with $terms terms" should {
 
-      val termMsg = TrackTerms(terms)
+      val termMsg = Track(terms = terms)
       tracker ! termMsg
-      expectMsg(MonitoringAck(termMsg, s"currently are tracked ${terms.size} terms"))
+      expectMsg(termMsg)
 
       tracker ! Start
       "return a ack with result" in {
-        expectMsg(OperationAck(Start, s"start listening on users Set() and $terms with 1 workers"))
+        expectMsg(OperationAck(Start.toString, s"start listening on users Set() and $terms with 1 workers"))
       }
 
       "the status should be running" in {
         tracker ! Status
-        expectMsg(OperationAck(Stop, s"the service is stopped ${Start}"))
+        expectMsg(OperationAck(Stop.toString, s"the service is stopped ${Start}"))
       }
 
       "succesfully stopped" in {
         tracker ! Stop
-        expectMsg(OperationAck(Stop, "the tracker is stopped"))
+        expectMsg(OperationAck(Stop.toString, "the tracker is stopped"))
       }
 
     }

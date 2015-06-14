@@ -2,7 +2,7 @@ package it.dtk.twitter
 
 import java.util.concurrent.LinkedBlockingQueue
 
-import akka.actor.{ ActorRef, ActorLogging, Actor, Props }
+import akka.actor._
 import MessageProtocol._
 import com.twitter.hbc.ClientBuilder
 import com.twitter.hbc.core.Constants._
@@ -12,7 +12,9 @@ import com.twitter.hbc.core.event.Event
 import com.twitter.hbc.core.processor.StringDelimitedProcessor
 import com.twitter.hbc.httpclient.BasicClient
 import com.twitter.hbc.httpclient.auth.OAuth1
+import it.dtk.twitter.MessageProtocol.Status
 import scala.concurrent.duration._
+import scala.language.postfixOps
 
 object TwitterTrackerHbc {
 
@@ -49,7 +51,7 @@ class TwitterTrackerHbc(appName: String,
   var rate = 50 milliseconds
 
   //init a default worker
-  addWorker()
+  addWorkerKafka()
 
   override def receive: Receive = stopped
 
@@ -60,27 +62,32 @@ class TwitterTrackerHbc(appName: String,
       client.foreach(_.connect())
 
       if (client.forall(c => !c.isDone)) {
-        sender() ! OperationAck(Start, s"start listening on users $users and $terms with ${workers.size} workers")
+        sender() ! OperationAck(Start.toString, s"start listening on users $users and $terms with ${workers.size} workers")
         context.become(running)
       }
       else {
-        sender() ! OperationFailed(Start, s"the client was not started $client")
+        sender() ! OperationFailed(Start.toString, s"the client was not started $client")
       }
 
     case Status =>
-      sender() ! OperationAck(Stop, s"the service is stopped ${Stop}")
+      sender() ! OperationAck(Status.toString, s"the service is stopped ${Stop}")
 
-    case u @ TrackUsers(set) =>
-      users = users union set
-      sender() ! MonitoringAck(u, s"currently are tracked ${users.size} users")
+    case Track(usersT, termsT, langsT) =>
+      users = users union usersT
+      terms = terms union termsT
+      languages = languages union langsT
+      sender() ! Track(users, terms, languages)
 
-    case t @ TrackTerms(set) =>
-      terms = terms union set
-      sender() ! MonitoringAck(t, s"currently are tracked ${terms.size} terms")
+    case AddWorkers(number) =>
+      (0 until number).foreach(_ => addWorkerKafka())
+      sender ! Workers(workers.size)
 
-    case l @ TrackLanguages(set) =>
-      languages = languages union set
-      sender() ! MonitoringAck(l, s"currently tracked ${languages.size} languages")
+    case Workers(_) =>
+      sender ! Workers(workers.size)
+
+    case DelWorkers(number) =>
+      removeWorkers(number)
+      sender() ! Workers(workers.size)
 
   }
 
@@ -88,33 +95,37 @@ class TwitterTrackerHbc(appName: String,
 
     case Stop =>
       client.foreach(_.stop())
-      sender() ! OperationAck(Stop, "the tracker is stopped")
+      sender() ! OperationAck(Stop.toString, s"the tracker is in $Stop")
       context.become(stopped)
 
     case Restart =>
       setParameters()
       client.foreach(_.reconnect())
-      sender() ! OperationAck(Restart, "reconnected updating tracked terms and users")
+      sender() ! OperationAck(Restart.toString, "reconnected updating tracked terms and users")
 
     case Status =>
-      sender() ! OperationAck(Stop, s"the service is stopped ${Start}")
+      sender() ! OperationAck(Status.toString, s"the service is ${Start}")
 
-    case u @ TrackUsers(set) =>
-      users = users union set
-      sender() ! MonitoringAck(u, s"currently are tracked ${users.size} users")
-
-    case t @ TrackTerms(set) =>
-      terms = terms union set
-      sender() ! MonitoringAck(t, s"currently are tracked ${terms.size} terms")
-
-    case l @ TrackLanguages(set) =>
-      languages = languages union set
-      sender() ! MonitoringAck(l, s"currently tracked ${languages.size} languages")
+    case Track(usersT, termsT, langsT) =>
+      users = users union usersT
+      terms = terms union termsT
+      languages = languages union langsT
+      sender() ! Track(users, terms, languages)
 
     case ChangeWorkersRate(update) =>
       rate = update
-      workers.foreach(_ ! TwitterWorkerHbc.UpdateRate(rate))
+      workers.foreach(_ ! TwitterWorkerPrint.UpdateRate(rate))
 
+    case AddWorkers(number) =>
+      (0 until number).foreach(_ => addWorkerKafka())
+      sender ! Workers(workers.size)
+
+    case Workers(_) =>
+      sender ! Workers(workers.size)
+
+    case DelWorkers(number) =>
+      removeWorkers(number)
+      sender() ! Workers(workers.size)
   }
 
   def basicClient(): BasicClient = {
@@ -134,6 +145,19 @@ class TwitterTrackerHbc(appName: String,
     endpoint.addPostParameter(Constants.FOLLOW_PARAM, users.mkString(","))
   }
 
-  def addWorker(): Unit = workers :+= context.actorOf(TwitterWorkerHbc.props(msgQueue))
+  def addWorkerKafka(): Unit =
+    workers ::= context.actorOf(TwitterWorkerKafka.props(msgQueue))
+
+  def addWorkerPrint(): Unit =
+    workers ::= context.actorOf(TwitterWorkerPrint.props(msgQueue))
+
+  def removeWorkers(n: Int): Unit = {
+    val size = if (n < workers.size - 1) n else workers.size - 1
+
+    for (i <- 0 until size) {
+      workers.head ! PoisonPill
+      workers = workers.tail
+    }
+  }
 
 }
