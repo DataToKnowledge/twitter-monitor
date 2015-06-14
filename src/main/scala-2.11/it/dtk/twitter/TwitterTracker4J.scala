@@ -1,9 +1,8 @@
 package it.dtk.twitter
 
-import akka.actor.{ActorRef, ActorLogging, Actor, Props}
+import akka.actor.{ ActorRef, ActorLogging, Actor, Props }
 import twitter4j._
 import twitter4j.conf.ConfigurationBuilder
-
 
 object TwitterTracker4J {
 
@@ -39,23 +38,17 @@ class TwitterTracker4J extends Actor with ActorLogging {
 
     case Start =>
       stream.filter(filterQuery())
-      sender() ! OperationAck(Start, s"start listening on users $users and tahs $terms")
+      sender() ! OperationAck(Start.toString, s"start listening on users $users and tahs $terms")
       context.become(running)
 
     case Status =>
-      sender() ! OperationAck(Stop, s"the service is stopped ${Stop}")
+      sender() ! OperationAck(Stop.toString, s"the service is stopped ${Stop}")
 
-    case u @ TrackUsers(set) =>
-      users = users.union(set)
-      sender() ! MonitoringAck(u, s"currently are tracked ${users.size} users")
-
-    case h @ TrackTerms(set) =>
-      terms = terms.union(set)
-      sender() ! MonitoringAck(h, s"currently are tracked ${terms.size} tags")
-
-    case l @ TrackLanguages(set) =>
-      languages = languages union set
-      sender() ! MonitoringAck(l, s"currently tracked ${languages.size} languages")
+    case Track(usersT, termsT, langsT) =>
+      users = users union usersT
+      terms = terms union termsT
+      languages = languages union langsT
+      sender() ! Track(users, terms, languages)
   }
 
   def running: Receive = {
@@ -63,27 +56,21 @@ class TwitterTracker4J extends Actor with ActorLogging {
     case Stop =>
       stream.cleanUp()
       context.become(stopped)
-      sender() ! OperationAck(Stop, "Twitter Tracker stopped")
+      sender() ! OperationAck(Stop.toString, "Twitter Tracker stopped")
 
     case Restart =>
       stream.cleanUp()
       stream.filter(filterQuery())
-      sender() ! OperationAck(Stop, "Twitter Tracker restarted")
+      sender() ! OperationAck(Stop.toString, "Twitter Tracker restarted")
 
     case Status =>
-      sender() ! OperationAck(Start, s"the service is in ${Start}")
+      sender() ! OperationAck(Start.toString, s"the service is in ${Start}")
 
-    case u @ TrackUsers(set) =>
-      users = users.union(set)
-      sender() ! MonitoringAck(u, s"currently are tracked ${users.size} users")
-
-    case h @ TrackTerms(set) =>
-      terms = terms.union(set)
-      sender() ! MonitoringAck(h, s"currently are tracked ${terms.size} tags")
-
-    case l @ TrackLanguages(set) =>
-      languages = languages union set
-      sender() ! MonitoringAck(l, s"currently tracked ${languages.size} languages")
+    case Track(usersT, termsT, langsT) =>
+      users = users union usersT
+      terms = terms union termsT
+      languages = languages union langsT
+      sender() ! Track(users, terms, languages)
 
     case Stall(msg) =>
       println(msg.getMessage)

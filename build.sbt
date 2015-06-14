@@ -22,7 +22,7 @@ libraryDependencies ++= {
     "io.spray"            %%  "spray-can"     % sprayV,
     "io.spray"            %%  "spray-routing" % sprayV,
     "io.spray"            %%  "spray-testkit" % sprayV  % "test",
-    "io.spray"            %%  "spray-json"    % "1.3.1"
+    "io.spray"            %%  "spray-json"    % "1.3.2"
   )
 
   val akka = Seq(
@@ -31,12 +31,13 @@ libraryDependencies ++= {
     "com.typesafe.akka"   %% "akka-stream-experimental" % "1.0-RC3",
     "com.typesafe.akka"   %%  "akka-slf4j"              % akkaV,
     "com.typesafe.akka"   %%  "akka-contrib"            % akkaV,
-    "ch.qos.logback"     % "logback-classic"            % "1.0.13"
+    "ch.qos.logback"     % "logback-classic"            % "1.1.3"
   )
 
   val test = Seq(
-    "org.scalatest" %% "scalatest" % "2.2.4" % "test",
-    "org.scalactic" %% "scalactic" % "2.2.4"
+    "org.scalatest" %% "scalatest" % "2.2.5" % "test",
+    "org.scalactic" %% "scalactic" % "2.2.5",
+    "org.scalacheck" %% "scalacheck" % "1.12.3" % "test"
   )
 
   val twitter = Seq(
@@ -48,8 +49,10 @@ libraryDependencies ++= {
 
   val kafka = Seq(
     //"org.apache.kafka" % "kafka-clients" % "0.8.2.1",
-    "org.apache.kafka" % "kafka_2.11" % "0.8.2.1"
+    "org.apache.kafka" % "kafka_2.11" % "0.8.2.1" exclude("org.slf4j","slf4j-log4j12")
   )
 
   spray ++ akka ++ test ++ twitter ++ kafka
 }
+
+Revolver.settings
