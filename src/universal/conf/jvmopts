@@ -1,4 +1,4 @@
--J-Xms512m
--J-Xmx512m
--J-XX:MaxPermSize=256m
--J-XX:ReservedCodeCacheSize=128m
+-J-Xms1024m
+-J-Xmx2048m
+-J-XX:MaxPermSize=512m
+-J-XX:ReservedCodeCacheSize=256m

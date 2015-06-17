@@ -1,1 +1,1 @@
-worker: target/universal/stage/bin/twitter-monitor
+web: target/universal/stage/bin/twitter-monitor

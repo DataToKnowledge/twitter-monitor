@@ -57,4 +57,5 @@ libraryDependencies ++= {
   spray ++ akka ++ test ++ twitter ++ kafka
 }
 
+javaOptions += "-Xms512m -Xmx2G"
 Revolver.settings
