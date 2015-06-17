@@ -1,4 +1,4 @@
-name := "kafka-producer"
+name := "twitter-monitor"
 
 version := "0.1"
 
@@ -12,6 +12,9 @@ resolvers ++= Seq(
   "Sonatype Releases" at "http://oss.sonatype.org/content/repositories/releases",
   "Maven central" at "http://repo1.maven.org/maven2/"
 )
+
+enablePlugins(JavaAppPackaging)
+bashScriptConfigLocation := Some("${app_home}/../conf/jvmopts")
 
 libraryDependencies ++= {
 
@@ -48,8 +51,7 @@ libraryDependencies ++= {
   )
 
   val kafka = Seq(
-    //"org.apache.kafka" % "kafka-clients" % "0.8.2.1",
-    "org.apache.kafka" % "kafka_2.11" % "0.8.2.1" exclude("org.slf4j","slf4j-log4j12")
+    "org.apache.kafka" % "kafka-clients" % "0.8.2.1"
   )
 
   spray ++ akka ++ test ++ twitter ++ kafka

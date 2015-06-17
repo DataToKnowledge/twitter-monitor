@@ -143,6 +143,8 @@ class TwitterTrackerHbc(appName: String,
     endpoint.addPostParameter(Constants.TRACK_PARAM, terms.mkString(","))
     endpoint.removePostParameter(Constants.FOLLOW_PARAM)
     endpoint.addPostParameter(Constants.FOLLOW_PARAM, users.mkString(","))
+    endpoint.removePostParameter(Constants.LANGUAGE_PARAM)
+    endpoint.addPostParameter(Constants.LANGUAGE_PARAM, languages.mkString(","))
   }
 
   def addWorkerKafka(): Unit =

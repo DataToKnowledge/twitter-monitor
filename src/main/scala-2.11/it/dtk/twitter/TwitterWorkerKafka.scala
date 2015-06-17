@@ -10,7 +10,7 @@ object TwitterWorkerKafka {
 
   case class UpdateRate(rate: FiniteDuration)
 
-  def props(queue: BlockingQueue[String]) = Props(new TwitterWorkerPrint(queue))
+  def props(queue: BlockingQueue[String]) = Props(new TwitterWorkerKafka(queue))
 }
 
 /**
@@ -42,6 +42,7 @@ class TwitterWorkerKafka(queue: BlockingQueue[String]) extends Actor with ActorL
   }
 
   override def postStop(): Unit = {
+    kafkaProducer.close()
     cancellable.cancel()
   }
 }
