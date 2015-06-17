@@ -2,8 +2,7 @@ package it.dtk.kafka
 
 import java.util.{ Properties, UUID }
 
-import kafka.message.{ NoCompressionCodec, DefaultCompressionCodec }
-import kafka.producer.{ KeyedMessage, Producer, ProducerConfig }
+import org.apache.kafka.clients.producer.{ KafkaProducer => KProducer, ProducerRecord, Producer, ProducerConfig }
 
 /**
  * @param requireAck =  0) which means that the producer never waits for an acknowledgement from the broker (the same behavior as 0.7).
@@ -24,22 +23,24 @@ class KafkaProducer(topic: String,
                     val requireAck: Integer = -1) {
 
   private val props = new Properties()
-  private val codec = if (compress) DefaultCompressionCodec.codec else NoCompressionCodec.codec
-  props.put("compression.codec", codec.toString)
-  props.put("producer.type", if (isAsync) "sync" else "async")
-  props.put("metadata.broker.list", brokersList)
+  props.put("bootstrap.servers", brokersList)
+  props.put("client.id", clientId)
+  props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+  props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
   props.put("batch.num.messages", batchSize.toString)
   props.put("message.send.max.retries", messageRetries.toString)
   props.put("request.required.acks", requireAck.toString)
-  props.put("client.id", clientId.toString)
 
-  private val producer = new Producer[AnyRef, AnyRef](new ProducerConfig(props))
+  private val producer = new KProducer[String, String](props)
 
   def send(message: String, optPartition: Option[String] = None): Unit = {
     val kafkaMessage = optPartition
-      .map(p => new KeyedMessage[AnyRef, AnyRef](topic, p, message))
-      .getOrElse(new KeyedMessage[AnyRef, AnyRef](topic, message))
+      .map(p => new ProducerRecord[String, String](topic, p, message))
+      .getOrElse(new ProducerRecord[String, String](topic, message))
 
     producer.send(kafkaMessage)
   }
+
+  def close(): Unit =
+    producer.close()
 }
