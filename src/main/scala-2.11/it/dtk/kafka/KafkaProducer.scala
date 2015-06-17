@@ -12,7 +12,7 @@ import org.apache.kafka.clients.producer.{ KafkaProducer => KProducer, ProducerR
  *     written to the now-dead leader but not yet replicated will be lost).
  * -1) which means that the producer gets an acknowledgement after all in-sync replicas have received the data. This option
  *     provides the best durability, we guarantee that no messages will be lost as long as at least
- */
+ **/
 class KafkaProducer(topic: String,
                     val brokersList: String,
                     val clientId: String = UUID.randomUUID().toString,

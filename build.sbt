@@ -13,6 +13,9 @@ resolvers ++= Seq(
   "Maven central" at "http://repo1.maven.org/maven2/"
 )
 
+enablePlugins(JavaAppPackaging)
+bashScriptConfigLocation := Some("${app_home}/../conf/jvmopts")
+
 libraryDependencies ++= {
 
   val akkaV = "2.3.11"
@@ -49,8 +52,6 @@ libraryDependencies ++= {
 
   val kafka = Seq(
     "org.apache.kafka" % "kafka-clients" % "0.8.2.1"
-    //"org.apache.kafka" % "kafka_2.10" % "0.8.2.1" exclude("org.slf4j","slf4j-log4j12")
-    //"org.apache.kafka" % "kafka_2.11" % "0.8.2.1" exclude("org.slf4j","slf4j-log4j12")
   )
 
   spray ++ akka ++ test ++ twitter ++ kafka
