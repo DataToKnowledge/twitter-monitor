@@ -22,7 +22,7 @@ class TwitterWorkerKafka(queue: BlockingQueue[String]) extends Actor with ActorL
   case object Process
   var rate = 50 milliseconds
 
-  val config = context.system.settings.config.getConfig("producer.kafka")
+  val config = context.system.settings.config.getConfig("twitter-monitor.kafka")
   val topic = config.getString("topic")
   val brokers = config.getString("brokers")
   val kafkaProducer = new KafkaProducer(topic, brokers)
