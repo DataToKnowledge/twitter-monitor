@@ -106,7 +106,7 @@ trait TwitterMonitorService extends HttpService with MyJsonProtocol {
 
 class TwitterMonitorActor extends Actor with TwitterMonitorService {
 
-  val config = context.system.settings.config.getConfig("producer")
+  val config = context.system.settings.config.getConfig("twitter-monitor")
   val twitterConf = config.getConfig("twitter")
 
   override val serviceActor = context.actorOf(TwitterTrackerHbc.props(
