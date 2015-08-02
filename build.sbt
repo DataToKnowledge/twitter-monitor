@@ -13,9 +13,6 @@ resolvers ++= Seq(
   "Maven central" at "http://repo1.maven.org/maven2/"
 )
 
-enablePlugins(JavaAppPackaging)
-bashScriptConfigLocation := Some("${app_home}/../conf/jvmopts")
-
 libraryDependencies ++= {
 
   val akkaV = "2.3.11"
@@ -59,3 +56,17 @@ libraryDependencies ++= {
 
 javaOptions += "-Xms512m -Xmx2G"
 Revolver.settings
+
+enablePlugins(JavaAppPackaging)
+bashScriptConfigLocation := Some("${app_home}/../conf/jvmopts")
+
+enablePlugins(DockerPlugin)
+// change the name of the project adding the prefix of the user
+packageName in Docker := "dtk/" +  packageName.value
+maintainer in Docker := "info@datatotknowledge.it"
+//the base docker images
+dockerBaseImage := "java:8-jre"
+//the exposed port
+dockerExposedPorts := Seq(5000)
+//exposed volumes
+dockerExposedVolumes := Seq("/opt/docker/logs")
